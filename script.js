@@ -1,544 +1,363 @@
-*{
-  margin:0;
-  padding:0;
-  box-sizing:border-box;
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+
+import {
+  getFirestore,
+  doc,
+  setDoc,
+  deleteDoc,
+  onSnapshot
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyBTASih7k_sRBtLMKTgHQXFM3lB64LKrQ4",
+  authDomain: "unsent-leaves.firebaseapp.com",
+  projectId: "unsent-leaves",
+  storageBucket: "unsent-leaves.firebasestorage.app",
+  messagingSenderId: "1025553746225",
+  appId: "1:1025553746225:web:9277a2c1ce9f933e320810"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+const popup = document.getElementById("popup");
+const helpPopup = document.getElementById("helpPopup");
+const aboutPopup = document.getElementById("aboutPopup");
+const treeFullMessage = document.getElementById("treeFullMessage");
+
+const popupTitle = document.getElementById("popupTitle");
+const toInput = document.getElementById("toInput");
+const messageInput = document.getElementById("messageInput");
+const readMessage = document.getElementById("readMessage");
+const popupTimer = document.getElementById("popupTimer");
+const saveBtn = document.getElementById("saveBtn");
+
+const notesContainer = document.getElementById("notesContainer");
+
+let selectedNote = null;
+let messages = {};
+
+const TWELVE_HOURS = 12 * 60 * 60 * 1000;
+
+const desktopPositions = [
+  {top:"50%", left:"35%"},
+  {top:"49%", left:"43%"},
+  {top:"49%", left:"50%"},
+  {top:"50%", left:"57%"},
+
+  {top:"61%", left:"33%"},
+  {top:"61%", left:"42%"},
+  {top:"61%", left:"50%"},
+  {top:"61%", left:"58%"},
+  {top:"61%", left:"67%"},
+
+  {top:"73%", left:"39%"},
+  {top:"73%", left:"50%"},
+  {top:"73%", left:"61%"}
+];
+
+const mobilePositions = [
+  {top:"60%", left:"29%"},
+  {top:"59%", left:"40%"},
+  {top:"59%", left:"50%"},
+  {top:"60%", left:"61%"},
+
+  {top:"73%", left:"27%"},
+  {top:"73%", left:"39%"},
+  {top:"73%", left:"50%"},
+  {top:"73%", left:"61%"},
+  {top:"73%", left:"73%"},
+
+  {top:"86%", left:"35%"},
+  {top:"86%", left:"50%"},
+  {top:"86%", left:"65%"}
+];
+
+const leafIcon = `
+<svg width="34" height="34" viewBox="0 0 64 64" fill="none">
+  <path
+    d="M51 11C32 12 17 22 13 43C31 45 48 32 51 11Z"
+    stroke="currentColor"
+    stroke-width="4"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+  />
+  <path
+    d="M14 43C25 34 34 27 47 17"
+    stroke="currentColor"
+    stroke-width="4"
+    stroke-linecap="round"
+  />
+</svg>
+`;
+
+function getPositions(){
+  return window.innerWidth <= 600 ? mobilePositions : desktopPositions;
 }
 
-body{
-  height:100vh;
-  overflow:hidden;
-  font-family:"Poppins", sans-serif;
+function applyNotePositions(){
+  const positions = getPositions();
+  const wrappers = document.querySelectorAll(".note-wrapper");
+
+  wrappers.forEach((wrapper, index) => {
+    wrapper.style.top = positions[index].top;
+    wrapper.style.left = positions[index].left;
+  });
 }
 
-/* BACKGROUND */
+function formatTimeLeft(expiresAt){
+  const timeLeft = expiresAt - Date.now();
 
-.background{
-  width:100%;
-  min-height:100vh;
-
-  position:relative;
-  overflow:hidden;
-
-  background-image:
-    linear-gradient(
-      rgba(2,4,20,0.12),
-      rgba(2,4,20,0.20)
-    ),
-    url("assets/bg-desktop.webp");
-
-  background-size:cover;
-  background-position:center center;
-  background-repeat:no-repeat;
-}
-
-/* TITLE */
-
-.app-title{
-  position:absolute;
-  top:38px;
-  left:42px;
-  z-index:10;
-}
-
-.app-title h1{
-  color:#fff7df;
-  font-family:"Cinzel", serif;
-  font-size:58px;
-  font-weight:700;
-  letter-spacing:1px;
-
-  text-shadow:
-    0 0 10px rgba(255,255,255,0.7),
-    0 0 28px rgba(139,92,246,0.65);
-}
-
-.app-title h1 span{
-  margin-left:10px;
-}
-
-.tagline-row{
-  margin-top:10px;
-  display:flex;
-  align-items:center;
-  gap:14px;
-}
-
-.tagline-row p{
-  color:#e2dcff;
-  font-size:15px;
-}
-
-.tagline-row a{
-  color:white;
-  font-size:14px;
-  text-decoration:none;
-  padding-left:14px;
-  border-left:1px solid rgba(255,255,255,0.25);
-}
-
-/* TOP BUTTONS */
-
-.top-buttons{
-  position:absolute;
-  top:35px;
-  right:45px;
-  z-index:15;
-
-  display:flex;
-  gap:14px;
-}
-
-.top-buttons button{
-  padding:11px 20px;
-
-  border-radius:16px;
-  border:1px solid rgba(255,255,255,0.18);
-
-  background:rgba(255,255,255,0.06);
-  color:white;
-
-  font-size:14px;
-  cursor:pointer;
-
-  backdrop-filter:blur(10px);
-  transition:0.3s;
-}
-
-.top-buttons button:hover{
-  background:rgba(139,92,246,0.25);
-  transform:translateY(-2px);
-}
-
-/* TREE MESSAGE */
-
-.tree-full-message{
-  position:absolute;
-  top:150px;
-  left:50%;
-
-  transform:translateX(-50%);
-
-  z-index:8;
-  text-align:center;
-  color:#ffe8a3;
-  display:none;
-
-  text-shadow:0 0 12px rgba(255,216,107,0.8);
-}
-
-.tree-full-message.active{
-  display:block;
-}
-
-.tree-full-message h3{
-  font-family:"Cinzel", serif;
-  font-size:22px;
-}
-
-.tree-full-message p{
-  margin-top:6px;
-  font-size:14px;
-}
-
-/* NOTES */
-
-.notes{
-  position:absolute;
-  inset:0;
-  z-index:7;
-}
-
-.note-wrapper{
-  position:absolute;
-  width:70px;
-  height:88px;
-  transform:translate(-50%, -50%);
-}
-
-.note{
-  width:54px;
-  height:54px;
-
-  border-radius:50%;
-  cursor:pointer;
-
-  display:flex;
-  align-items:center;
-  justify-content:center;
-
-  background:rgba(255,244,160,0.05);
-  border:1px solid rgba(255,232,163,0.45);
-
-  box-shadow:
-    0 0 12px rgba(255,232,163,0.9),
-    0 0 30px rgba(255,216,107,0.45);
-
-  animation:swing 3s ease-in-out infinite;
-  backdrop-filter:blur(2px);
-}
-
-.note svg{
-  width:34px;
-  height:34px;
-  color:#dfff8a;
-
-  filter:
-    drop-shadow(0 0 8px rgba(215,255,128,0.9));
-}
-
-.note.filled svg{
-  color:#ffd86b;
-
-  filter:
-    drop-shadow(0 0 10px rgba(255,216,107,1));
-}
-
-.note-timer{
-  width:80px;
-
-  position:absolute;
-  top:60px;
-  left:50%;
-
-  transform:translateX(-50%);
-
-  text-align:center;
-  font-size:10px;
-
-  color:#ffe8a3;
-  text-shadow:0 0 8px #ffd86b;
-
-  display:none;
-}
-
-@keyframes swing{
-  0%{ rotate:3deg; }
-  50%{ rotate:-3deg; }
-  100%{ rotate:3deg; }
-}
-
-/* PARTICLES */
-
-.particles span{
-  position:absolute;
-
-  width:6px;
-  height:6px;
-
-  border-radius:50%;
-  background:#fff3b0;
-
-  box-shadow:
-    0 0 12px #fff3b0,
-    0 0 22px #ffd86b;
-
-  animation:float 8s linear infinite;
-}
-
-.particles span:nth-child(1){ left:10%; top:70%; }
-.particles span:nth-child(2){ left:22%; top:82%; }
-.particles span:nth-child(3){ left:68%; top:78%; }
-.particles span:nth-child(4){ left:82%; top:60%; }
-.particles span:nth-child(5){ left:55%; top:88%; }
-
-@keyframes float{
-  0%{
-    transform:translateY(0);
-    opacity:0;
+  if(timeLeft <= 0){
+    return "00:00:00";
   }
 
-  20%{
-    opacity:1;
-  }
+  const totalSeconds = Math.floor(timeLeft / 1000);
+  const hours = Math.floor(totalSeconds / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+  const seconds = totalSeconds % 60;
 
-  100%{
-    transform:translateY(-420px);
-    opacity:0;
+  return `${String(hours).padStart(2,"0")}:${String(minutes).padStart(2,"0")}:${String(seconds).padStart(2,"0")}`;
+}
+
+function updateTreeFullMessage(){
+  const usedLeaves = Object.keys(messages).length;
+
+  if(usedLeaves >= 12){
+    treeFullMessage.classList.add("active");
+  } else {
+    treeFullMessage.classList.remove("active");
   }
 }
 
-/* SOUND BUTTON */
+function createNotes(){
+  notesContainer.innerHTML = "";
 
-.sound-toggle{
-  position:fixed;
+  for(let i = 1; i <= 12; i++){
+    const wrapper = document.createElement("div");
+    wrapper.classList.add("note-wrapper");
 
-  bottom:24px;
-  right:24px;
+    const note = document.createElement("div");
+    note.classList.add("note");
+    note.innerHTML = leafIcon;
+    note.onclick = () => openPopup(i);
 
-  width:52px;
-  height:52px;
+    const timer = document.createElement("div");
+    timer.classList.add("note-timer");
+    timer.id = `timer-${i}`;
 
-  border:none;
-  border-radius:50%;
+    wrapper.appendChild(note);
+    wrapper.appendChild(timer);
 
-  background:rgba(255,255,255,0.08);
-
-  backdrop-filter:blur(12px);
-
-  border:1px solid rgba(255,255,255,0.15);
-
-  color:white;
-  font-size:22px;
-
-  cursor:pointer;
-  z-index:50;
-
-  transition:0.3s;
-
-  box-shadow:
-    0 0 18px rgba(139,92,246,0.28);
-}
-
-.sound-toggle:hover{
-  transform:scale(1.08);
-  background:rgba(139,92,246,0.22);
-}
-
-/* POPUPS */
-
-.popup{
-  width:100%;
-  height:100vh;
-
-  position:fixed;
-  inset:0;
-
-  display:flex;
-  justify-content:center;
-  align-items:center;
-
-  background:rgba(0,0,0,0.55);
-  backdrop-filter:blur(8px);
-
-  opacity:0;
-  pointer-events:none;
-
-  transition:0.3s;
-  z-index:30;
-}
-
-.popup.active{
-  opacity:1;
-  pointer-events:auto;
-}
-
-.popup-box{
-  width:330px;
-
-  background:rgba(22,18,48,0.82);
-
-  border:1px solid rgba(255,255,255,0.12);
-  border-radius:22px;
-
-  padding:26px;
-
-  display:flex;
-  flex-direction:column;
-  gap:15px;
-
-  position:relative;
-
-  box-shadow:
-    0 0 35px rgba(139,92,246,0.35);
-}
-
-.popup-box h2{
-  color:white;
-  text-align:center;
-}
-
-.popup-box input,
-.popup-box textarea{
-  width:100%;
-
-  background:rgba(255,255,255,0.06);
-
-  border:1px solid rgba(255,255,255,0.08);
-  outline:none;
-
-  padding:14px;
-  border-radius:12px;
-
-  color:white;
-  resize:none;
-}
-
-.popup-box textarea{
-  height:120px;
-}
-
-.popup-box button{
-  background:#8b5cf6;
-  border:none;
-
-  padding:14px;
-  border-radius:12px;
-
-  color:white;
-  cursor:pointer;
-}
-
-.read-message{
-  display:none;
-  color:white;
-  line-height:1.6;
-
-  background:rgba(255,255,255,0.06);
-
-  padding:15px;
-  border-radius:12px;
-}
-
-.read-message p{
-  margin-top:8px;
-  color:#ffe8a3;
-}
-
-.popup-timer{
-  display:none;
-  color:#ffd86b;
-  text-align:center;
-  font-size:14px;
-}
-
-/* INFO BOX */
-
-.info-box{
-  text-align:center;
-}
-
-.info-box p,
-.info-box small{
-  color:#d8d3ff;
-  line-height:1.6;
-}
-
-.info-box strong{
-  color:#ffe8a3;
-}
-
-.about-symbol{
-  font-size:32px;
-  margin:5px 0;
-}
-
-.divider{
-  height:1px;
-  background:rgba(255,255,255,0.12);
-  margin:5px 0;
-}
-
-.close-btn{
-  position:absolute;
-
-  top:12px;
-  right:12px;
-
-  width:32px;
-  height:32px;
-
-  border-radius:50% !important;
-  padding:0 !important;
-
-  background:rgba(255,255,255,0.08) !important;
-  font-size:20px;
-}
-
-/* MOBILE */
-
-@media(max-width:600px){
-
-  .background{
-    background-image:
-      linear-gradient(
-        rgba(2,4,20,0.12),
-        rgba(2,4,20,0.20)
-      ),
-      url("assets/bg-mobile.webp");
-
-    background-size:cover;
-    background-position:center center;
-    background-repeat:no-repeat;
+    notesContainer.appendChild(wrapper);
   }
 
-  .app-title{
-    top:22px;
-    left:50%;
-
-    transform:translateX(-50%);
-
-    text-align:center;
-    width:92%;
-  }
-
-  .app-title h1{
-    font-size:31px;
-  }
-
-  .tagline-row{
-    justify-content:center;
-    flex-wrap:wrap;
-    gap:8px;
-  }
-
-  .tagline-row p{
-    font-size:12px;
-  }
-
-  .tagline-row a{
-    font-size:11px;
-  }
-
-  .top-buttons{
-    top:92px;
-    right:50%;
-
-    transform:translateX(50%);
-  }
-
-  .top-buttons button{
-    padding:8px 14px;
-    font-size:12px;
-  }
-
-  .tree-full-message{
-    top:140px;
-    width:90%;
-  }
-
-  .note{
-    width:38px;
-    height:38px;
-  }
-
-  .note svg{
-    width:24px;
-    height:24px;
-  }
-
-  .note-wrapper{
-    width:55px;
-    height:72px;
-  }
-
-  .note-timer{
-    top:45px;
-    font-size:8px;
-  }
-
-  .sound-toggle{
-    width:46px;
-    height:46px;
-
-    bottom:18px;
-    right:18px;
-
-    font-size:20px;
-  }
-
-  .popup-box{
-    width:90%;
-    max-width:335px;
-  }
-
+  applyNotePositions();
 }
+
+function updateNoteUI(){
+  const allNotes = document.querySelectorAll(".note");
+  const allTimers = document.querySelectorAll(".note-timer");
+
+  for(let i = 1; i <= 12; i++){
+    if(messages[i]){
+      allNotes[i - 1].classList.add("filled");
+      allTimers[i - 1].style.display = "block";
+    } else {
+      allNotes[i - 1].classList.remove("filled");
+      allTimers[i - 1].style.display = "none";
+      allTimers[i - 1].innerText = "";
+    }
+  }
+
+  updateTreeFullMessage();
+}
+
+function listenToFirebaseNotes(){
+  for(let i = 1; i <= 12; i++){
+    const noteRef = doc(db, "notes", String(i));
+
+    onSnapshot(noteRef, async (snapshot) => {
+      if(snapshot.exists()){
+        const data = snapshot.data();
+
+        if(Date.now() > data.expiresAt){
+          await deleteDoc(noteRef);
+          delete messages[i];
+        } else {
+          messages[i] = data;
+        }
+      } else {
+        delete messages[i];
+      }
+
+      updateNoteUI();
+    });
+  }
+}
+
+function openPopup(noteNumber){
+  selectedNote = noteNumber;
+
+  const savedMessage = messages[noteNumber];
+
+  popup.classList.add("active");
+
+  if(savedMessage){
+    popupTitle.innerText = "Secret Letter";
+
+    toInput.style.display = "none";
+    messageInput.style.display = "none";
+    saveBtn.style.display = "none";
+
+    readMessage.style.display = "block";
+    popupTimer.style.display = "block";
+
+    readMessage.innerHTML = `
+      <strong>To: ${savedMessage.to}</strong>
+      <p>${savedMessage.message}</p>
+    `;
+
+    popupTimer.innerText =
+      `This letter fades in ${formatTimeLeft(savedMessage.expiresAt)}`;
+
+  } else {
+    popupTitle.innerText = "Hang Your Secret";
+
+    toInput.style.display = "block";
+    messageInput.style.display = "block";
+    saveBtn.style.display = "block";
+
+    readMessage.style.display = "none";
+    popupTimer.style.display = "none";
+
+    toInput.value = "";
+    messageInput.value = "";
+  }
+}
+
+async function saveMessage(){
+  const to = toInput.value.trim();
+  const message = messageInput.value.trim();
+
+  if(to === "" || message === ""){
+    alert("Please write both name and message");
+    return;
+  }
+
+  const noteRef = doc(db, "notes", String(selectedNote));
+
+  await setDoc(noteRef, {
+    to: to,
+    message: message,
+    createdAt: Date.now(),
+    expiresAt: Date.now() + TWELVE_HOURS
+  });
+
+  closePopup();
+}
+
+async function updateTimers(){
+  for(let i = 1; i <= 12; i++){
+    const timer = document.getElementById(`timer-${i}`);
+
+    if(messages[i]){
+      if(Date.now() > messages[i].expiresAt){
+        await deleteDoc(doc(db, "notes", String(i)));
+        delete messages[i];
+        updateNoteUI();
+      } else {
+        timer.style.display = "block";
+        timer.innerText = formatTimeLeft(messages[i].expiresAt);
+      }
+    }
+  }
+
+  if(selectedNote && messages[selectedNote] && popup.classList.contains("active")){
+    popupTimer.innerText =
+      `This letter fades in ${formatTimeLeft(messages[selectedNote].expiresAt)}`;
+  }
+}
+
+function closePopup(){
+  popup.classList.remove("active");
+}
+
+function outsideClick(event){
+  if(event.target === popup){
+    closePopup();
+  }
+}
+
+function openHelpPopup(){
+  helpPopup.classList.add("active");
+}
+
+function closeHelpPopup(){
+  helpPopup.classList.remove("active");
+}
+
+function outsideHelpClick(event){
+  if(event.target === helpPopup){
+    closeHelpPopup();
+  }
+}
+
+function openAboutPopup(){
+  aboutPopup.classList.add("active");
+}
+
+function closeAboutPopup(){
+  aboutPopup.classList.remove("active");
+}
+
+function outsideAboutClick(event){
+  if(event.target === aboutPopup){
+    closeAboutPopup();
+  }
+}
+
+/* BACKGROUND SOUND */
+
+const bgMusic = document.getElementById("bgMusic");
+const soundToggle = document.getElementById("soundToggle");
+
+let isPlaying = false;
+
+bgMusic.volume = 0.25;
+
+soundToggle.addEventListener("click", () => {
+  if(isPlaying){
+    bgMusic.pause();
+    soundToggle.innerText = "🔇";
+    isPlaying = false;
+  } else {
+    bgMusic.play();
+    soundToggle.innerText = "🔊";
+    isPlaying = true;
+  }
+});
+
+/* MAKE HTML BUTTONS WORK WITH MODULE JS */
+
+window.openPopup = openPopup;
+window.saveMessage = saveMessage;
+window.closePopup = closePopup;
+window.outsideClick = outsideClick;
+
+window.openHelpPopup = openHelpPopup;
+window.closeHelpPopup = closeHelpPopup;
+window.outsideHelpClick = outsideHelpClick;
+
+window.openAboutPopup = openAboutPopup;
+window.closeAboutPopup = closeAboutPopup;
+window.outsideAboutClick = outsideAboutClick;
+
+/* START APP */
+
+createNotes();
+listenToFirebaseNotes();
+
+window.addEventListener("resize", applyNotePositions);
+
+setInterval(updateTimers, 1000);
