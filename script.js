@@ -1,3 +1,25 @@
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+
+import {
+  getFirestore,
+  doc,
+  setDoc,
+  deleteDoc,
+  onSnapshot
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyBTASih7k_sRBtLMKTgHQXFM3lB64LKrQ4",
+  authDomain: "unsent-leaves.firebaseapp.com",
+  projectId: "unsent-leaves",
+  storageBucket: "unsent-leaves.firebasestorage.app",
+  messagingSenderId: "1025553746225",
+  appId: "1:1025553746225:web:9277a2c1ce9f933e320810"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
 const popup = document.getElementById("popup");
 const helpPopup = document.getElementById("helpPopup");
 const aboutPopup = document.getElementById("aboutPopup");
@@ -13,10 +35,9 @@ const saveBtn = document.getElementById("saveBtn");
 const notesContainer = document.getElementById("notesContainer");
 
 let selectedNote = null;
+let messages = {};
 
 const TWELVE_HOURS = 12 * 60 * 60 * 1000;
-
-let messages = JSON.parse(localStorage.getItem("messages")) || {};
 
 const desktopPositions = [
   {top:"50%", left:"35%"},
@@ -84,28 +105,6 @@ function applyNotePositions(){
   });
 }
 
-function saveMessagesToStorage(){
-  localStorage.setItem("messages", JSON.stringify(messages));
-}
-
-function isExpired(messageData){
-  if(!messageData.expiresAt){
-    return true;
-  }
-
-  return Date.now() > messageData.expiresAt;
-}
-
-function cleanExpiredMessages(){
-  for(const noteNumber in messages){
-    if(isExpired(messages[noteNumber])){
-      delete messages[noteNumber];
-    }
-  }
-
-  saveMessagesToStorage();
-}
-
 function formatTimeLeft(expiresAt){
   const timeLeft = expiresAt - Date.now();
 
@@ -131,42 +130,73 @@ function updateTreeFullMessage(){
   }
 }
 
-cleanExpiredMessages();
+function createNotes(){
+  notesContainer.innerHTML = "";
 
-for(let i = 1; i <= 12; i++){
+  for(let i = 1; i <= 12; i++){
+    const wrapper = document.createElement("div");
+    wrapper.classList.add("note-wrapper");
 
-  const wrapper = document.createElement("div");
-  wrapper.classList.add("note-wrapper");
+    const note = document.createElement("div");
+    note.classList.add("note");
+    note.innerHTML = leafIcon;
+    note.onclick = () => openPopup(i);
 
-  const note = document.createElement("div");
-  note.classList.add("note");
+    const timer = document.createElement("div");
+    timer.classList.add("note-timer");
+    timer.id = `timer-${i}`;
 
-  note.innerHTML = leafIcon;
+    wrapper.appendChild(note);
+    wrapper.appendChild(timer);
 
-  note.onclick = () => openPopup(i);
-
-  const timer = document.createElement("div");
-  timer.classList.add("note-timer");
-  timer.id = `timer-${i}`;
-
-  if(messages[i]){
-    note.classList.add("filled");
-    timer.style.display = "block";
+    notesContainer.appendChild(wrapper);
   }
 
-  wrapper.appendChild(note);
-  wrapper.appendChild(timer);
-
-  notesContainer.appendChild(wrapper);
+  applyNotePositions();
 }
 
-applyNotePositions();
-updateTreeFullMessage();
+function updateNoteUI(){
+  const allNotes = document.querySelectorAll(".note");
+  const allTimers = document.querySelectorAll(".note-timer");
 
-window.addEventListener("resize", applyNotePositions);
+  for(let i = 1; i <= 12; i++){
+    if(messages[i]){
+      allNotes[i - 1].classList.add("filled");
+      allTimers[i - 1].style.display = "block";
+    } else {
+      allNotes[i - 1].classList.remove("filled");
+      allTimers[i - 1].style.display = "none";
+      allTimers[i - 1].innerText = "";
+    }
+  }
+
+  updateTreeFullMessage();
+}
+
+function listenToFirebaseNotes(){
+  for(let i = 1; i <= 12; i++){
+    const noteRef = doc(db, "notes", String(i));
+
+    onSnapshot(noteRef, async (snapshot) => {
+      if(snapshot.exists()){
+        const data = snapshot.data();
+
+        if(Date.now() > data.expiresAt){
+          await deleteDoc(noteRef);
+          delete messages[i];
+        } else {
+          messages[i] = data;
+        }
+      } else {
+        delete messages[i];
+      }
+
+      updateNoteUI();
+    });
+  }
+}
 
 function openPopup(noteNumber){
-
   selectedNote = noteNumber;
 
   const savedMessage = messages[noteNumber];
@@ -174,7 +204,6 @@ function openPopup(noteNumber){
   popup.classList.add("active");
 
   if(savedMessage){
-
     popupTitle.innerText = "Secret Letter";
 
     toInput.style.display = "none";
@@ -193,7 +222,6 @@ function openPopup(noteNumber){
       `This letter fades in ${formatTimeLeft(savedMessage.expiresAt)}`;
 
   } else {
-
     popupTitle.innerText = "Hang Your Secret";
 
     toInput.style.display = "block";
@@ -208,8 +236,7 @@ function openPopup(noteNumber){
   }
 }
 
-function saveMessage(){
-
+async function saveMessage(){
   const to = toInput.value.trim();
   const message = messageInput.value.trim();
 
@@ -218,75 +245,39 @@ function saveMessage(){
     return;
   }
 
-  messages[selectedNote] = {
+  const noteRef = doc(db, "notes", String(selectedNote));
+
+  await setDoc(noteRef, {
     to: to,
     message: message,
     createdAt: Date.now(),
     expiresAt: Date.now() + TWELVE_HOURS
-  };
-
-  saveMessagesToStorage();
-
-  const allNotes = document.querySelectorAll(".note");
-  const allTimers = document.querySelectorAll(".note-timer");
-
-  allNotes[selectedNote - 1].classList.add("filled");
-  allTimers[selectedNote - 1].style.display = "block";
-
-  updateTreeFullMessage();
+  });
 
   closePopup();
 }
 
-function updateTimers(){
-
+async function updateTimers(){
   for(let i = 1; i <= 12; i++){
-
-    const timer =
-      document.getElementById(`timer-${i}`);
-
-    const note =
-      document.querySelectorAll(".note")[i - 1];
+    const timer = document.getElementById(`timer-${i}`);
 
     if(messages[i]){
-
-      if(isExpired(messages[i])){
-
+      if(Date.now() > messages[i].expiresAt){
+        await deleteDoc(doc(db, "notes", String(i)));
         delete messages[i];
-
-        saveMessagesToStorage();
-
-        note.classList.remove("filled");
-
-        timer.style.display = "none";
-        timer.innerText = "";
-
-        updateTreeFullMessage();
-
+        updateNoteUI();
       } else {
-
         timer.style.display = "block";
-
-        timer.innerText =
-          formatTimeLeft(messages[i].expiresAt);
+        timer.innerText = formatTimeLeft(messages[i].expiresAt);
       }
     }
   }
 
-  if(
-    selectedNote &&
-    messages[selectedNote] &&
-    popup.classList.contains("active")
-  ){
-
+  if(selectedNote && messages[selectedNote] && popup.classList.contains("active")){
     popupTimer.innerText =
       `This letter fades in ${formatTimeLeft(messages[selectedNote].expiresAt)}`;
   }
 }
-
-setInterval(updateTimers, 1000);
-
-updateTimers();
 
 function closePopup(){
   popup.classList.remove("active");
@@ -336,22 +327,37 @@ let isPlaying = false;
 bgMusic.volume = 0.25;
 
 soundToggle.addEventListener("click", () => {
-
   if(isPlaying){
-
     bgMusic.pause();
-
     soundToggle.innerText = "🔇";
-
     isPlaying = false;
-
   } else {
-
     bgMusic.play();
-
     soundToggle.innerText = "🔊";
-
     isPlaying = true;
   }
-
 });
+
+/* MAKE HTML BUTTONS WORK WITH MODULE JS */
+
+window.openPopup = openPopup;
+window.saveMessage = saveMessage;
+window.closePopup = closePopup;
+window.outsideClick = outsideClick;
+
+window.openHelpPopup = openHelpPopup;
+window.closeHelpPopup = closeHelpPopup;
+window.outsideHelpClick = outsideHelpClick;
+
+window.openAboutPopup = openAboutPopup;
+window.closeAboutPopup = closeAboutPopup;
+window.outsideAboutClick = outsideAboutClick;
+
+/* START APP */
+
+createNotes();
+listenToFirebaseNotes();
+
+window.addEventListener("resize", applyNotePositions);
+
+setInterval(updateTimers, 1000);
