@@ -10,20 +10,14 @@ body{
   font-family:"Poppins", sans-serif;
 }
 
-/* BACKGROUND */
-
 .background{
   width:100%;
   min-height:100vh;
-
   position:relative;
   overflow:hidden;
 
   background-image:
-    linear-gradient(
-      rgba(2,4,20,0.12),
-      rgba(2,4,20,0.20)
-    ),
+    linear-gradient(rgba(2,4,20,0.12), rgba(2,4,20,0.20)),
     url("assets/bg-desktop.webp");
 
   background-size:cover;
@@ -83,23 +77,18 @@ body{
   top:35px;
   right:45px;
   z-index:15;
-
   display:flex;
   gap:14px;
 }
 
 .top-buttons button{
   padding:11px 20px;
-
   border-radius:16px;
   border:1px solid rgba(255,255,255,0.18);
-
   background:rgba(255,255,255,0.06);
   color:white;
-
   font-size:14px;
   cursor:pointer;
-
   backdrop-filter:blur(10px);
   transition:0.3s;
 }
@@ -115,14 +104,11 @@ body{
   position:absolute;
   top:150px;
   left:50%;
-
   transform:translateX(-50%);
-
   z-index:8;
   text-align:center;
   color:#ffe8a3;
   display:none;
-
   text-shadow:0 0 12px rgba(255,216,107,0.8);
 }
 
@@ -158,21 +144,16 @@ body{
 .note{
   width:54px;
   height:54px;
-
   border-radius:50%;
   cursor:pointer;
-
   display:flex;
   align-items:center;
   justify-content:center;
-
   background:rgba(255,244,160,0.05);
   border:1px solid rgba(255,232,163,0.45);
-
   box-shadow:
     0 0 12px rgba(255,232,163,0.9),
     0 0 30px rgba(255,216,107,0.45);
-
   animation:swing 3s ease-in-out infinite;
   backdrop-filter:blur(2px);
 }
@@ -181,33 +162,30 @@ body{
   width:34px;
   height:34px;
   color:#dfff8a;
-
-  filter:
-    drop-shadow(0 0 8px rgba(215,255,128,0.9));
+  filter:drop-shadow(0 0 8px rgba(215,255,128,0.9));
 }
 
 .note.filled svg{
   color:#ffd86b;
+  filter:drop-shadow(0 0 10px rgba(255,216,107,1));
+}
 
-  filter:
-    drop-shadow(0 0 10px rgba(255,216,107,1));
+.note.has-replies{
+  box-shadow:
+    0 0 12px rgba(196,181,253,0.95),
+    0 0 34px rgba(139,92,246,0.65);
 }
 
 .note-timer{
   width:80px;
-
   position:absolute;
   top:60px;
   left:50%;
-
   transform:translateX(-50%);
-
   text-align:center;
   font-size:10px;
-
   color:#ffe8a3;
   text-shadow:0 0 8px #ffd86b;
-
   display:none;
 }
 
@@ -221,17 +199,13 @@ body{
 
 .particles span{
   position:absolute;
-
   width:6px;
   height:6px;
-
   border-radius:50%;
   background:#fff3b0;
-
   box-shadow:
     0 0 12px #fff3b0,
     0 0 22px #ffd86b;
-
   animation:float 8s linear infinite;
 }
 
@@ -242,51 +216,30 @@ body{
 .particles span:nth-child(5){ left:55%; top:88%; }
 
 @keyframes float{
-  0%{
-    transform:translateY(0);
-    opacity:0;
-  }
-
-  20%{
-    opacity:1;
-  }
-
-  100%{
-    transform:translateY(-420px);
-    opacity:0;
-  }
+  0%{ transform:translateY(0); opacity:0; }
+  20%{ opacity:1; }
+  100%{ transform:translateY(-420px); opacity:0; }
 }
 
 /* SOUND BUTTON */
 
 .sound-toggle{
   position:fixed;
-
   bottom:24px;
   right:24px;
-
   width:52px;
   height:52px;
-
   border:none;
   border-radius:50%;
-
   background:rgba(255,255,255,0.08);
-
   backdrop-filter:blur(12px);
-
   border:1px solid rgba(255,255,255,0.15);
-
   color:white;
   font-size:22px;
-
   cursor:pointer;
   z-index:50;
-
   transition:0.3s;
-
-  box-shadow:
-    0 0 18px rgba(139,92,246,0.28);
+  box-shadow:0 0 18px rgba(139,92,246,0.28);
 }
 
 .sound-toggle:hover{
@@ -299,20 +252,15 @@ body{
 .popup{
   width:100%;
   height:100vh;
-
   position:fixed;
   inset:0;
-
   display:flex;
   justify-content:center;
   align-items:center;
-
   background:rgba(0,0,0,0.55);
   backdrop-filter:blur(8px);
-
   opacity:0;
   pointer-events:none;
-
   transition:0.3s;
   z-index:30;
 }
@@ -323,23 +271,18 @@ body{
 }
 
 .popup-box{
-  width:330px;
-
+  width:350px;
+  max-height:88vh;
+  overflow-y:auto;
   background:rgba(22,18,48,0.82);
-
   border:1px solid rgba(255,255,255,0.12);
   border-radius:22px;
-
   padding:26px;
-
   display:flex;
   flex-direction:column;
   gap:15px;
-
   position:relative;
-
-  box-shadow:
-    0 0 35px rgba(139,92,246,0.35);
+  box-shadow:0 0 35px rgba(139,92,246,0.35);
 }
 
 .popup-box h2{
@@ -350,15 +293,11 @@ body{
 .popup-box input,
 .popup-box textarea{
   width:100%;
-
   background:rgba(255,255,255,0.06);
-
   border:1px solid rgba(255,255,255,0.08);
   outline:none;
-
   padding:14px;
   border-radius:12px;
-
   color:white;
   resize:none;
 }
@@ -370,10 +309,8 @@ body{
 .popup-box button{
   background:#8b5cf6;
   border:none;
-
   padding:14px;
   border-radius:12px;
-
   color:white;
   cursor:pointer;
 }
@@ -382,9 +319,7 @@ body{
   display:none;
   color:white;
   line-height:1.6;
-
   background:rgba(255,255,255,0.06);
-
   padding:15px;
   border-radius:12px;
 }
@@ -399,6 +334,53 @@ body{
   color:#ffd86b;
   text-align:center;
   font-size:14px;
+}
+
+/* REPLY SECTION */
+
+.reply-section{
+  display:none;
+  flex-direction:column;
+  gap:10px;
+}
+
+.reply-section h3{
+  color:#e9ddff;
+  font-size:14px;
+  text-align:center;
+  font-weight:500;
+}
+
+.replies-list{
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+  max-height:120px;
+  overflow-y:auto;
+}
+
+.reply-item{
+  background:rgba(139,92,246,0.12);
+  border:1px solid rgba(255,255,255,0.08);
+  color:#f5f0ff;
+  padding:10px;
+  border-radius:12px;
+  font-size:12px;
+  line-height:1.5;
+}
+
+.no-replies{
+  color:rgba(255,255,255,0.55);
+  text-align:center;
+  font-size:12px;
+}
+
+#replyInput{
+  height:75px;
+}
+
+#replyBtn{
+  background:#6d5dfc;
 }
 
 /* INFO BOX */
@@ -430,16 +412,12 @@ body{
 
 .close-btn{
   position:absolute;
-
   top:12px;
   right:12px;
-
   width:32px;
   height:32px;
-
   border-radius:50% !important;
   padding:0 !important;
-
   background:rgba(255,255,255,0.08) !important;
   font-size:20px;
 }
@@ -450,12 +428,8 @@ body{
 
   .background{
     background-image:
-      linear-gradient(
-        rgba(2,4,20,0.12),
-        rgba(2,4,20,0.20)
-      ),
+      linear-gradient(rgba(2,4,20,0.12), rgba(2,4,20,0.20)),
       url("assets/bg-mobile.webp");
-
     background-size:cover;
     background-position:center center;
     background-repeat:no-repeat;
@@ -464,9 +438,7 @@ body{
   .app-title{
     top:22px;
     left:50%;
-
     transform:translateX(-50%);
-
     text-align:center;
     width:92%;
   }
@@ -492,7 +464,6 @@ body{
   .top-buttons{
     top:92px;
     right:50%;
-
     transform:translateX(50%);
   }
 
@@ -529,10 +500,8 @@ body{
   .sound-toggle{
     width:46px;
     height:46px;
-
     bottom:18px;
     right:18px;
-
     font-size:20px;
   }
 
@@ -540,5 +509,4 @@ body{
     width:90%;
     max-width:335px;
   }
-
 }
