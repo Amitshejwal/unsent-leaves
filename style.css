@@ -50,24 +50,25 @@ body{
   margin-left:10px;
 }
 
-.tagline-row{
-  margin-top:10px;
-  display:flex;
-  align-items:center;
-  gap:14px;
-}
-
-.tagline-row p{
+.main-tagline{
+  margin-top:8px;
   color:#e2dcff;
   font-size:15px;
+  letter-spacing:0.4px;
+  text-shadow:0 0 10px rgba(139,92,246,0.35);
 }
 
-.tagline-row a{
+.creator-link{
+  display:inline-block;
+  margin-top:6px;
   color:white;
-  font-size:14px;
+  font-size:13px;
   text-decoration:none;
-  padding-left:14px;
-  border-left:1px solid rgba(255,255,255,0.25);
+  opacity:0.9;
+}
+
+.creator-link:hover{
+  text-decoration:underline;
 }
 
 /* TOP BUTTONS */
@@ -447,18 +448,14 @@ body{
     font-size:31px;
   }
 
-  .tagline-row{
-    justify-content:center;
-    flex-wrap:wrap;
-    gap:8px;
-  }
-
-  .tagline-row p{
+  .main-tagline{
     font-size:12px;
+    margin-top:6px;
   }
 
-  .tagline-row a{
+  .creator-link{
     font-size:11px;
+    margin-top:5px;
   }
 
   .top-buttons{
