@@ -58,19 +58,6 @@ body{
   text-shadow:0 0 10px rgba(139,92,246,0.35);
 }
 
-.creator-link{
-  display:inline-block;
-  margin-top:6px;
-  color:white;
-  font-size:13px;
-  text-decoration:none;
-  opacity:0.9;
-}
-
-.creator-link:hover{
-  text-decoration:underline;
-}
-
 /* TOP BUTTONS */
 
 .top-buttons{
@@ -451,11 +438,6 @@ body{
   .main-tagline{
     font-size:12px;
     margin-top:6px;
-  }
-
-  .creator-link{
-    font-size:11px;
-    margin-top:5px;
   }
 
   .top-buttons{
