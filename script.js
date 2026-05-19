@@ -5,7 +5,9 @@ import {
   doc,
   setDoc,
   deleteDoc,
-  onSnapshot
+  onSnapshot,
+  updateDoc,
+  arrayUnion
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 const firebaseConfig = {
@@ -32,6 +34,10 @@ const readMessage = document.getElementById("readMessage");
 const popupTimer = document.getElementById("popupTimer");
 const saveBtn = document.getElementById("saveBtn");
 
+const replySection = document.getElementById("replySection");
+const repliesList = document.getElementById("repliesList");
+const replyInput = document.getElementById("replyInput");
+
 const notesContainer = document.getElementById("notesContainer");
 
 let selectedNote = null;
@@ -44,13 +50,11 @@ const desktopPositions = [
   {top:"49%", left:"43%"},
   {top:"49%", left:"50%"},
   {top:"50%", left:"57%"},
-
   {top:"61%", left:"33%"},
   {top:"61%", left:"42%"},
   {top:"61%", left:"50%"},
   {top:"61%", left:"58%"},
   {top:"61%", left:"67%"},
-
   {top:"73%", left:"39%"},
   {top:"73%", left:"50%"},
   {top:"73%", left:"61%"}
@@ -61,13 +65,11 @@ const mobilePositions = [
   {top:"59%", left:"40%"},
   {top:"59%", left:"50%"},
   {top:"60%", left:"61%"},
-
   {top:"73%", left:"27%"},
   {top:"73%", left:"39%"},
   {top:"73%", left:"50%"},
   {top:"73%", left:"61%"},
   {top:"73%", left:"73%"},
-
   {top:"86%", left:"35%"},
   {top:"86%", left:"50%"},
   {top:"86%", left:"65%"}
@@ -163,8 +165,16 @@ function updateNoteUI(){
     if(messages[i]){
       allNotes[i - 1].classList.add("filled");
       allTimers[i - 1].style.display = "block";
+
+      if(messages[i].replies && messages[i].replies.length > 0){
+        allNotes[i - 1].classList.add("has-replies");
+      } else {
+        allNotes[i - 1].classList.remove("has-replies");
+      }
+
     } else {
       allNotes[i - 1].classList.remove("filled");
+      allNotes[i - 1].classList.remove("has-replies");
       allTimers[i - 1].style.display = "none";
       allTimers[i - 1].innerText = "";
     }
@@ -192,8 +202,35 @@ function listenToFirebaseNotes(){
       }
 
       updateNoteUI();
+
+      if(selectedNote === i && popup.classList.contains("active")){
+        renderReplies(i);
+      }
     });
   }
+}
+
+function renderReplies(noteNumber){
+  const savedMessage = messages[noteNumber];
+  const replies = savedMessage?.replies || [];
+
+  repliesList.innerHTML = "";
+
+  if(replies.length === 0){
+    repliesList.innerHTML = `
+      <div class="no-replies">
+        No replies yet. Be the first to respond softly.
+      </div>
+    `;
+    return;
+  }
+
+  replies.forEach((reply) => {
+    const replyItem = document.createElement("div");
+    replyItem.classList.add("reply-item");
+    replyItem.innerText = reply.message;
+    repliesList.appendChild(replyItem);
+  });
 }
 
 function openPopup(noteNumber){
@@ -211,12 +248,16 @@ function openPopup(noteNumber){
     saveBtn.style.display = "none";
 
     readMessage.style.display = "block";
+    replySection.style.display = "flex";
     popupTimer.style.display = "block";
 
     readMessage.innerHTML = `
       <strong>To: ${savedMessage.to}</strong>
       <p>${savedMessage.message}</p>
     `;
+
+    replyInput.value = "";
+    renderReplies(noteNumber);
 
     popupTimer.innerText =
       `This letter fades in ${formatTimeLeft(savedMessage.expiresAt)}`;
@@ -229,10 +270,12 @@ function openPopup(noteNumber){
     saveBtn.style.display = "block";
 
     readMessage.style.display = "none";
+    replySection.style.display = "none";
     popupTimer.style.display = "none";
 
     toInput.value = "";
     messageInput.value = "";
+    replyInput.value = "";
   }
 }
 
@@ -250,11 +293,32 @@ async function saveMessage(){
   await setDoc(noteRef, {
     to: to,
     message: message,
+    replies: [],
     createdAt: Date.now(),
     expiresAt: Date.now() + TWELVE_HOURS
   });
 
   closePopup();
+}
+
+async function saveReply(){
+  const replyMessage = replyInput.value.trim();
+
+  if(replyMessage === ""){
+    alert("Please write a reply first");
+    return;
+  }
+
+  const noteRef = doc(db, "notes", String(selectedNote));
+
+  await updateDoc(noteRef, {
+    replies: arrayUnion({
+      message: replyMessage,
+      createdAt: Date.now()
+    })
+  });
+
+  replyInput.value = "";
 }
 
 async function updateTimers(){
@@ -342,6 +406,7 @@ soundToggle.addEventListener("click", () => {
 
 window.openPopup = openPopup;
 window.saveMessage = saveMessage;
+window.saveReply = saveReply;
 window.closePopup = closePopup;
 window.outsideClick = outsideClick;
 
