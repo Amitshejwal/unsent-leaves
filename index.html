@@ -2,7 +2,6 @@
 <html lang="en">
 
 <head>
-
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 
@@ -17,9 +16,7 @@
   >
 
   <link rel="preload" as="image" href="assets/bg-desktop.webp">
-
   <link rel="stylesheet" href="style.css">
-
 </head>
 
 <body>
@@ -27,119 +24,78 @@
   <div class="background">
 
     <div class="app-title">
-
       <h1>Unsent<span>Leaves</span></h1>
 
       <div class="tagline-row">
-
         <p>🍃 Hang the words you never said.</p>
 
-        <a
-          href="https://www.instagram.com/amitshejwal_"
-          target="_blank"
-        >
+        <a href="https://www.instagram.com/amitshejwal_" target="_blank">
           @amitshejwal_
         </a>
-
       </div>
-
     </div>
 
     <div class="top-buttons">
-
-      <button onclick="openAboutPopup()">
-        About
-      </button>
-
-      <button onclick="openHelpPopup()">
-        Help
-      </button>
-
+      <button onclick="openAboutPopup()">About</button>
+      <button onclick="openHelpPopup()">Help</button>
     </div>
 
     <div class="tree-full-message" id="treeFullMessage">
-
       <h3>🌙 All 12 leaves are used.</h3>
-
       <p>No leaves left. Come back later.</p>
-
     </div>
 
     <div class="notes" id="notesContainer"></div>
 
     <div class="particles">
-
-      <span></span>
-      <span></span>
-      <span></span>
-      <span></span>
-      <span></span>
-
+      <span></span><span></span><span></span><span></span><span></span>
     </div>
 
   </div>
 
   <div class="popup" id="popup" onclick="outsideClick(event)">
-
     <div class="popup-box">
 
-      <button
-        class="close-btn"
-        onclick="closePopup()"
-      >
-        ×
-      </button>
+      <button class="close-btn" onclick="closePopup()">×</button>
 
-      <h2 id="popupTitle">
-        Hang Your Secret
-      </h2>
+      <h2 id="popupTitle">Hang Your Secret</h2>
 
-      <input
-        type="text"
-        id="toInput"
-        placeholder="To..."
-      />
+      <input type="text" id="toInput" placeholder="To..." />
 
-      <textarea
-        id="messageInput"
-        placeholder="Write your message..."
-      ></textarea>
+      <textarea id="messageInput" placeholder="Write your message..."></textarea>
 
       <div class="read-message" id="readMessage"></div>
 
+      <div class="reply-section" id="replySection">
+        <h3>Anonymous Replies</h3>
+
+        <div class="replies-list" id="repliesList"></div>
+
+        <textarea
+          id="replyInput"
+          placeholder="Write an anonymous reply..."
+        ></textarea>
+
+        <button id="replyBtn" onclick="saveReply()">
+          Send Reply
+        </button>
+      </div>
+
       <div class="popup-timer" id="popupTimer"></div>
 
-      <button
-        id="saveBtn"
-        onclick="saveMessage()"
-      >
-        Hang on Tree
-      </button>
+      <button id="saveBtn" onclick="saveMessage()">Hang on Tree</button>
 
     </div>
-
   </div>
 
-  <div
-    class="popup"
-    id="aboutPopup"
-    onclick="outsideAboutClick(event)"
-  >
-
+  <div class="popup" id="aboutPopup" onclick="outsideAboutClick(event)">
     <div class="popup-box info-box">
 
-      <button
-        class="close-btn"
-        onclick="closeAboutPopup()"
-      >
-        ×
-      </button>
+      <button class="close-btn" onclick="closeAboutPopup()">×</button>
 
       <h2>About Unsent Leaves</h2>
 
-      <div class="about-symbol">
-        🍃
-      </div>
+      <div class="about-symbol">🍃</div>
 
       <p>
         Unsent Leaves is a quiet place to anonymously hang the words you never said.
@@ -159,23 +115,12 @@
       </small>
 
     </div>
-
   </div>
 
-  <div
-    class="popup"
-    id="helpPopup"
-    onclick="outsideHelpClick(event)"
-  >
-
+  <div class="popup" id="helpPopup" onclick="outsideHelpClick(event)">
     <div class="popup-box info-box">
 
-      <button
-        class="close-btn"
-        onclick="closeHelpPopup()"
-      >
-        ×
-      </button>
+      <button class="close-btn" onclick="closeHelpPopup()">×</button>
 
       <h2>Need Help?</h2>
 
@@ -187,23 +132,17 @@
       </p>
 
     </div>
-
   </div>
 
   <audio id="bgMusic" loop preload="none">
     <source src="assets/ambient.mp3" type="audio/mpeg">
   </audio>
 
-  <button
-    class="sound-toggle"
-    id="soundToggle"
-    aria-label="Toggle background sound"
-  >
+  <button class="sound-toggle" id="soundToggle" aria-label="Toggle background sound">
     🔇
   </button>
 
   <script type="module" src="./script.js"></script>
 
 </body>
-
 </html>
