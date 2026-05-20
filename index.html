@@ -1,19 +1,14 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-
   <title>Unsent Leaves</title>
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 
-  <link
-    href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Poppins:wght@300;400;500;600&display=swap"
-    rel="stylesheet"
-  >
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
 
   <link rel="preload" as="image" href="assets/bg-desktop.webp">
   <link rel="stylesheet" href="style.css">
@@ -25,10 +20,7 @@
 
     <div class="app-title">
       <h1>Unsent<span>Leaves</span></h1>
-
-      <p class="main-tagline">
-        🍃 Hang the words you never said.
-      </p>
+      <p class="main-tagline">🍃 Hang the words you never said.</p>
     </div>
 
     <div class="top-buttons">
@@ -57,24 +49,23 @@
       <h2 id="popupTitle">Hang Your Secret</h2>
 
       <input type="text" id="toInput" placeholder="To..." />
-
       <textarea id="messageInput" placeholder="Write your message..."></textarea>
 
       <div class="read-message" id="readMessage"></div>
+
+      <div class="message-actions" id="messageActions">
+        <span id="viewsCount">👁 0</span>
+        <button id="likeBtn" onclick="likeMessage()">🤍 <span id="likesCount">0</span></button>
+      </div>
 
       <div class="reply-section" id="replySection">
         <h3>Anonymous Replies</h3>
 
         <div class="replies-list" id="repliesList"></div>
 
-        <textarea
-          id="replyInput"
-          placeholder="Write an anonymous reply..."
-        ></textarea>
+        <textarea id="replyInput" placeholder="Write an anonymous reply..."></textarea>
 
-        <button id="replyBtn" onclick="saveReply()">
-          Send Reply
-        </button>
+        <button id="replyBtn" onclick="saveReply()">Send Reply</button>
       </div>
 
       <div class="popup-timer" id="popupTimer"></div>
@@ -100,15 +91,11 @@
 
       <div class="divider"></div>
 
-      <small>
-        ✨ Suggest features you'd love to see added to Unsent Leaves.
-      </small>
+      <small>✨ Suggest features you'd love to see added to Unsent Leaves.</small>
 
       <div class="divider"></div>
 
-      <small>
-        Made with 💜 by Amit Shejwal
-      </small>
+      <small>Made with 💜 by Amit Shejwal</small>
 
     </div>
   </div>
