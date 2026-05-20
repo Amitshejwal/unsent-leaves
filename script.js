@@ -7,7 +7,8 @@ import {
   deleteDoc,
   onSnapshot,
   updateDoc,
-  arrayUnion
+  arrayUnion,
+  increment
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 const firebaseConfig = {
@@ -33,6 +34,11 @@ const messageInput = document.getElementById("messageInput");
 const readMessage = document.getElementById("readMessage");
 const popupTimer = document.getElementById("popupTimer");
 const saveBtn = document.getElementById("saveBtn");
+
+const messageActions = document.getElementById("messageActions");
+const viewsCount = document.getElementById("viewsCount");
+const likesCount = document.getElementById("likesCount");
+const likeBtn = document.getElementById("likeBtn");
 
 const replySection = document.getElementById("replySection");
 const repliesList = document.getElementById("repliesList");
@@ -163,6 +169,8 @@ function updateNoteUI(){
 
   for(let i = 1; i <= 12; i++){
     if(messages[i]){
+      const likes = messages[i].likes || 0;
+
       allNotes[i - 1].classList.add("filled");
       allTimers[i - 1].style.display = "block";
 
@@ -172,9 +180,16 @@ function updateNoteUI(){
         allNotes[i - 1].classList.remove("has-replies");
       }
 
+      if(likes >= 10){
+        allNotes[i - 1].classList.add("popular");
+      } else {
+        allNotes[i - 1].classList.remove("popular");
+      }
+
     } else {
       allNotes[i - 1].classList.remove("filled");
       allNotes[i - 1].classList.remove("has-replies");
+      allNotes[i - 1].classList.remove("popular");
       allTimers[i - 1].style.display = "none";
       allTimers[i - 1].innerText = "";
     }
@@ -204,10 +219,49 @@ function listenToFirebaseNotes(){
       updateNoteUI();
 
       if(selectedNote === i && popup.classList.contains("active")){
+        updateMessageStats(i);
         renderReplies(i);
       }
     });
   }
+}
+
+function updateMessageStats(noteNumber){
+  const savedMessage = messages[noteNumber];
+
+  if(!savedMessage){
+    return;
+  }
+
+  const views = savedMessage.views || 0;
+  const likes = savedMessage.likes || 0;
+
+  viewsCount.innerText = `👁 ${views}`;
+  likesCount.innerText = likes;
+
+  if(localStorage.getItem(`liked_note_${noteNumber}`)){
+    likeBtn.classList.add("liked");
+    likeBtn.innerHTML = `❤️ <span id="likesCount">${likes}</span>`;
+  } else {
+    likeBtn.classList.remove("liked");
+    likeBtn.innerHTML = `🤍 <span id="likesCount">${likes}</span>`;
+  }
+}
+
+async function countView(noteNumber){
+  const viewKey = `viewed_note_${noteNumber}`;
+
+  if(localStorage.getItem(viewKey)){
+    return;
+  }
+
+  localStorage.setItem(viewKey, "true");
+
+  const noteRef = doc(db, "notes", String(noteNumber));
+
+  await updateDoc(noteRef, {
+    views: increment(1)
+  });
 }
 
 function renderReplies(noteNumber){
@@ -228,7 +282,22 @@ function renderReplies(noteNumber){
   replies.forEach((reply) => {
     const replyItem = document.createElement("div");
     replyItem.classList.add("reply-item");
-    replyItem.innerText = reply.message;
+
+    const liked = localStorage.getItem(`liked_reply_${noteNumber}_${reply.id}`);
+
+    replyItem.innerHTML = `
+      <div>${reply.message}</div>
+
+      <div class="reply-like-row">
+        <button
+          class="${liked ? "liked" : ""}"
+          onclick="likeReply('${noteNumber}', '${reply.id}')"
+        >
+          ${liked ? "❤️" : "🤍"} ${reply.likes || 0}
+        </button>
+      </div>
+    `;
+
     repliesList.appendChild(replyItem);
   });
 }
@@ -248,6 +317,7 @@ function openPopup(noteNumber){
     saveBtn.style.display = "none";
 
     readMessage.style.display = "block";
+    messageActions.style.display = "flex";
     replySection.style.display = "flex";
     popupTimer.style.display = "block";
 
@@ -255,6 +325,9 @@ function openPopup(noteNumber){
       <strong>To: ${savedMessage.to}</strong>
       <p>${savedMessage.message}</p>
     `;
+
+    countView(noteNumber);
+    updateMessageStats(noteNumber);
 
     replyInput.value = "";
     renderReplies(noteNumber);
@@ -270,6 +343,7 @@ function openPopup(noteNumber){
     saveBtn.style.display = "block";
 
     readMessage.style.display = "none";
+    messageActions.style.display = "none";
     replySection.style.display = "none";
     popupTimer.style.display = "none";
 
@@ -294,11 +368,33 @@ async function saveMessage(){
     to: to,
     message: message,
     replies: [],
+    likes: 0,
+    views: 0,
     createdAt: Date.now(),
     expiresAt: Date.now() + TWELVE_HOURS
   });
 
   closePopup();
+}
+
+async function likeMessage(){
+  if(!selectedNote || !messages[selectedNote]){
+    return;
+  }
+
+  const likeKey = `liked_note_${selectedNote}`;
+
+  if(localStorage.getItem(likeKey)){
+    return;
+  }
+
+  localStorage.setItem(likeKey, "true");
+
+  const noteRef = doc(db, "notes", String(selectedNote));
+
+  await updateDoc(noteRef, {
+    likes: increment(1)
+  });
 }
 
 async function saveReply(){
@@ -311,14 +407,49 @@ async function saveReply(){
 
   const noteRef = doc(db, "notes", String(selectedNote));
 
+  const replyId = `${Date.now()}_${Math.floor(Math.random() * 99999)}`;
+
   await updateDoc(noteRef, {
     replies: arrayUnion({
+      id: replyId,
       message: replyMessage,
+      likes: 0,
       createdAt: Date.now()
     })
   });
 
   replyInput.value = "";
+}
+
+async function likeReply(noteNumber, replyId){
+  const likeKey = `liked_reply_${noteNumber}_${replyId}`;
+
+  if(localStorage.getItem(likeKey)){
+    return;
+  }
+
+  const savedMessage = messages[noteNumber];
+
+  if(!savedMessage || !savedMessage.replies){
+    return;
+  }
+
+  const updatedReplies = savedMessage.replies.map((reply) => {
+    if(reply.id === replyId){
+      return {
+        ...reply,
+        likes: (reply.likes || 0) + 1
+      };
+    }
+
+    return reply;
+  });
+
+  localStorage.setItem(likeKey, "true");
+
+  await updateDoc(doc(db, "notes", String(noteNumber)), {
+    replies: updatedReplies
+  });
 }
 
 async function updateTimers(){
@@ -407,6 +538,8 @@ soundToggle.addEventListener("click", () => {
 window.openPopup = openPopup;
 window.saveMessage = saveMessage;
 window.saveReply = saveReply;
+window.likeMessage = likeMessage;
+window.likeReply = likeReply;
 window.closePopup = closePopup;
 window.outsideClick = outsideClick;
 
